@@ -6,11 +6,18 @@ import (
 	"judge/domain"
 	"log"
 	"net/http"
+	"time"
 )
+
+type WebSocketHandler struct {
+	RacerInfoChannel chan domain.RacerInfo
+	ServerInfoChannel chan domain.ServerInfo
+	Judge app.JudgeOfRace
+}
 
 var upgrader = websocket.Upgrader{} // use default options
 
-func WebSocketHandler(w http.ResponseWriter, r *http.Request) {
+func (wsh *WebSocketHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var c *websocket.Conn
 	c, err = upgrader.Upgrade(w, r, nil)
@@ -30,7 +37,27 @@ func WebSocketHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Printf("recv from: %s", inMessage.Name)
 
-		app.RacerInfoChannel <- inMessage
+		//select {
+		//case app.RacerInfoChannel <- inMessage:
+		//	continue
+		//default:
+		//	continue
+		//}
+
+		RacerInfoChannel <- inMessage
+
+		//var outMessage domain.ServerInfo
+
+		//select {
+		//case outMessage =  <- app.ServerInfoChannel:
+		//	err = c.WriteJSON(outMessage)
+		//	if err != nil {
+		//		log.Println("write:", err)
+		//		break
+		//	}
+		//default:
+		//	continue
+		//}
 
 		outMessage := <- app.ServerInfoChannel
 
@@ -39,7 +66,6 @@ func WebSocketHandler(w http.ResponseWriter, r *http.Request) {
 			log.Println("write:", err)
 			break
 		}
+		time.Sleep(app.LoopSleepTime)
 	}
-
-
 }

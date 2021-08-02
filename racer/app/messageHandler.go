@@ -1,6 +1,7 @@
 package app
 
 import (
+	"racer/config"
 	"racer/domain"
 	"racer/infrastructure"
 )
@@ -33,6 +34,7 @@ func (m *MessageHandler) StartHandling() {
 
 		switch inMessage.Message {
 		case NewCommand:
+			config.SetStepsPerLapValue(inMessage.StepsInLap)
 			m.Console.ShowMessage("You are connected")
 		case StepCommand:
 			m.Racer.MakeStep()
