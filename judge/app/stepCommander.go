@@ -1,32 +1,35 @@
 package app
 
 import (
-	"RacersRace/domain"
+	"judge/domain"
+	"log"
 	"time"
 )
 
 type StepCommander struct {
-	stepChannel []chan time.Time
-	stepTicker  *time.Ticker
+	stepChannels *domain.StepChannelsStorage
+	stepTicker   *time.Ticker
 }
 
-func NewStepCommander(stepChannel []chan time.Time) *StepCommander {
-	return &StepCommander{stepChannel: stepChannel}
+func NewStepCommander(stepChannels *domain.StepChannelsStorage) *StepCommander {
+	return &StepCommander{stepChannels: stepChannels}
 }
 
 func (s *StepCommander) Run() {
-	s.stepTicker = time.NewTicker(domain.StepTime)
+	s.stepTicker = time.NewTicker(StepTime)
 	var signal time.Time
 
 	for {
 		select {
-		case signal = <-s.stepTicker.C:
-			for i := range s.stepChannel {
-				s.stepChannel[i] <- signal
+		case signal = <- s.stepTicker.C:
+			//log.Println("Step")
+			for i := range s.stepChannels.Channels {
+				s.stepChannels.Channels[i] <- signal
+				log.Println("Sended to stepChannel", i)
 			}
 		default:
 			continue
 		}
-		time.Sleep(domain.LoopSleepTime)
+		time.Sleep(LoopSleepTime)
 	}
 }

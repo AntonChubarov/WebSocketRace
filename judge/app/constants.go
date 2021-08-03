@@ -10,4 +10,5 @@ const (
 	UpdateCommand = "Update"
 	StepCommand = "Step"
 	StepsInLap = 50
+	Racers = 3
 )

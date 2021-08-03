@@ -1,9 +1,11 @@
 package app
 
 import (
+	"log"
 	"racer/config"
 	"racer/domain"
 	"racer/infrastructure"
+	"strconv"
 )
 
 type MessageHandler struct {
@@ -35,12 +37,14 @@ func (m *MessageHandler) StartHandling() {
 		switch inMessage.Message {
 		case NewCommand:
 			config.SetStepsPerLapValue(inMessage.StepsInLap)
-			m.Console.ShowMessage("You are connected")
+			m.Console.ShowMessage("You are connected!\nSteps in lap = " + strconv.Itoa(inMessage.StepsInLap))
 		case StepCommand:
 			m.Racer.MakeStep()
+			log.Println("stepMessage")
 			outMessage := m.Racer.GetInfo()
 			m.Client.SendMessage(outMessage)
 		case UpdateCommand:
+			log.Println("displayMessage")
 			m.Console.ShowRaceInfo(inMessage)
 		default:
 			continue

@@ -1,40 +1,46 @@
 package app
 
 import (
-	"RacersRace/domain"
+	"judge/domain"
+	"log"
 	"sync"
 	"time"
 )
 
 type DisplayCommander struct {
-	racersInfo      *[]domain.RacerInfo
+	racersInfo      *domain.RacersInfoStorage
 	displayTicker   *time.Ticker
-	displayChannel  chan []domain.RacerInfo
+	displayChannels *domain.DisplayChannelStorage
 	mutexRacersInfo *sync.RWMutex
 }
 
-func NewDisplayCommander(racersInfo *[]domain.RacerInfo,
-	displayChannel chan []domain.RacerInfo,
+func NewDisplayCommander(racersInfo *domain.RacersInfoStorage,
+	displayChannel *domain.DisplayChannelStorage,
 	mutexRacersInfo *sync.RWMutex,
 ) *DisplayCommander {
 	return &DisplayCommander{racersInfo: racersInfo,
-		displayChannel: displayChannel,
+		displayChannels: displayChannel,
 		mutexRacersInfo: mutexRacersInfo,
 	}
 }
 
 func (d *DisplayCommander) Run() {
-	d.displayTicker = time.NewTicker(domain.DisplayTime)
+	d.displayTicker = time.NewTicker(DisplayTime)
 
 	for {
 		select {
 		case <-d.displayTicker.C:
+			log.Println("Display tick")
 			d.mutexRacersInfo.RLock()
-			d.displayChannel <- *d.racersInfo
+			for i := range d.displayChannels.Channels {
+				d.displayChannels.Channels[i] <- d.racersInfo.Info
+				log.Println("Info sent to display channel", i)
+			}
+
 			d.mutexRacersInfo.RUnlock()
 		default:
 			continue
 		}
-		time.Sleep(domain.LoopSleepTime)
+		time.Sleep(LoopSleepTime)
 	}
 }

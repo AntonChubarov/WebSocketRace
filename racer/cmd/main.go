@@ -14,6 +14,8 @@ import (
 
 
 func main() {
+	defer fmt.Scan()
+
 	flag.Parse()
 	log.SetFlags(0)
 

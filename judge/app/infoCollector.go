@@ -1,23 +1,28 @@
 package app
 
 import (
-	"RacersRace/domain"
+	"fmt"
+	"judge/domain"
+	"log"
 	"sync"
 	"time"
 )
 
 type InfoCollector struct {
-	racersInfo      *[]domain.RacerInfo
-	infoChannels    *[]chan domain.RacerInfo
+	racersInfo      *domain.RacersInfoStorage
+	infoChannels    *domain.InfoChannelsStorage
 	isInactiveRacer *[]bool
 	mutexRacersInfo *sync.RWMutex
 }
 
-func NewInfoCollector(racersInfo *[]domain.RacerInfo,
-	infoChannels *[]chan domain.RacerInfo,
+func NewInfoCollector(racersInfo *domain.RacersInfoStorage,
+	infoChannels *domain.InfoChannelsStorage,
 	isInactiveRacer *[]bool,
 	mutexRacersInfo *sync.RWMutex,
 ) *InfoCollector {
+
+	log.Println(fmt.Sprintf("%p", isInactiveRacer))
+
 	return &InfoCollector{racersInfo: racersInfo,
 		infoChannels: infoChannels,
 		isInactiveRacer: isInactiveRacer,
@@ -30,13 +35,13 @@ func (ic *InfoCollector) Run() {
 	var ok bool
 	var in domain.RacerInfo
 	for {
-		for i := range *ic.infoChannels {
-			if in, ok = <- (*ic.infoChannels)[i]; ok && !(*ic.isInactiveRacer)[i] {
+		for i := range ic.infoChannels.Channels {
+			if in, ok = <- ic.infoChannels.Channels[i]; ok && !(*ic.isInactiveRacer)[i] {
 				ic.mutexRacersInfo.Lock()
-				(*ic.racersInfo)[i] = in
+				ic.racersInfo.Info[i] = in
 				ic.mutexRacersInfo.Unlock()
 			}
 		}
-		time.Sleep(domain.LoopSleepTime)
+		time.Sleep(LoopSleepTime)
 	}
 }
